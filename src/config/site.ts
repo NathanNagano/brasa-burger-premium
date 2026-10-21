@@ -6,6 +6,13 @@ export const siteConfig = {
   name: "BRASA BURGER",
   shortName: "BRASA",
   tagline: "Hamburgueria artesanal",
+
+  /** Partes do logo para renderização. `accent` recebe a cor primária. */
+  logo: {
+    main: "BRASA",
+    accent: "BURGER",
+  },
+
   seo: {
     title: "BRASA BURGER — Hamburgueria artesanal | Cardápio digital",
     description:
@@ -36,6 +43,22 @@ export const siteConfig = {
     facebook: "#",
     tiktok: "#",
   },
+
+  /** Conteúdo da seção "Sobre nós". */
+  about: {
+    eyebrow: "Sobre nós",
+    title: "Nascida na brasa",
+    paragraphs: [
+      "A Brasa Burger começou com uma chapa, uma receita de molho e a vontade de fazer o hambúrguer que a gente sempre quis comer: simples, suculento e com crosta de verdade.",
+      "Hoje seguimos do mesmo jeito — poucos ingredientes, muito cuidado e fogo alto.",
+    ],
+    /** Aviso exibido em sites de demonstração. Vazio = não exibe. */
+    demoNotice: "História fictícia, criada apenas para demonstração deste modelo.",
+  },
+
+  /** Aviso de rodapé exibido em sites de demonstração. */
+  footerNotice: "Marca fictícia — modelo demonstrativo. Imagens ilustrativas.",
+
   nav: [
     { label: "Início", href: "#inicio" },
     { label: "Cardápio", href: "#cardapio" },

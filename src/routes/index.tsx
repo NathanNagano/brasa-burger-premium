@@ -1,13 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+
+import { SeletorDeModelo, type Modelo } from "@/components/SeletorDeModelo";
 import { siteConfig } from "@/config/site";
-import { Header } from "@/components/site/Header";
-import { Hero } from "@/components/site/Hero";
-import { Features } from "@/components/site/Features";
-import { MenuSection } from "@/components/site/MenuSection";
-import { Highlights } from "@/components/site/Highlights";
-import { AboutSection } from "@/components/site/AboutSection";
-import { ContactSection } from "@/components/site/ContactSection";
-import { Footer } from "@/components/site/Footer";
+import { ModeloMinimalista } from "@/modelos/minimalista/ModeloMinimalista";
+import { ModeloPremium } from "@/modelos/premium/ModeloPremium";
+import { ModeloRetro } from "@/modelos/retro/ModeloRetro";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -23,19 +21,35 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
+function ehModelo(valor: string | null): valor is Modelo {
+  return valor === "premium" || valor === "retro" || valor === "minimalista";
+}
+
 function Index() {
+  const [modelo, setModelo] = useState<Modelo>("premium");
+
+  // Recupera a última opção escolhida no navegador.
+  useEffect(() => {
+    const modeloSalvo = window.localStorage.getItem("brasa-modelo-demo");
+
+    if (ehModelo(modeloSalvo)) {
+      setModelo(modeloSalvo);
+    }
+  }, []);
+
+  // Atualiza o tema visual e salva a escolha atual.
+  useEffect(() => {
+    document.documentElement.dataset["modelo"] = modelo;
+    window.localStorage.setItem("brasa-modelo-demo", modelo);
+  }, [modelo]);
+
   return (
     <>
-      <Header />
-      <main>
-        <Hero />
-        <Features />
-        <MenuSection />
-        <Highlights />
-        <AboutSection />
-        <ContactSection />
-      </main>
-      <Footer />
+      <SeletorDeModelo modeloAtual={modelo} aoTrocar={setModelo} />
+
+      {modelo === "premium" && <ModeloPremium />}
+      {modelo === "retro" && <ModeloRetro />}
+      {modelo === "minimalista" && <ModeloMinimalista />}
     </>
   );
 }

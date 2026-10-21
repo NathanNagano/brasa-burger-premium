@@ -8,19 +8,19 @@ export function Footer() {
     { label: "TikTok", href: siteConfig.social.tiktok, icon: Music2 },
   ];
   return (
-    <footer className="border-t py-12">
+    <footer className="border-t-4 border-primary bg-brown py-12 text-cream">
       <div className="container-page grid gap-8 md:grid-cols-3 md:items-center">
         <div>
           <p className="font-display text-2xl text-cream">
-            BRASA<span className="text-primary"> BURGER</span>
+            BRASA<span className="font-script text-secondary"> Burger</span>
           </p>
-          <p className="mt-1 text-sm text-muted-foreground">{siteConfig.tagline}</p>
+          <p className="mt-1 text-sm text-cream/70">{siteConfig.tagline}</p>
         </div>
         <nav aria-label="Rodapé">
           <ul className="flex flex-wrap gap-x-6 gap-y-2 md:justify-center">
             {siteConfig.nav.map((n) => (
               <li key={n.href}>
-                <a href={n.href} className="text-sm text-cream/70 hover:text-primary">{n.label}</a>
+                <a href={n.href} className="text-sm text-cream/80 hover:text-secondary">{n.label}</a>
               </li>
             ))}
           </ul>
@@ -28,14 +28,14 @@ export function Footer() {
         <ul className="flex gap-3 md:justify-end">
           {socials.map(({ label, href, icon: Icon }) => (
             <li key={label}>
-              <a href={href} aria-label={label} className="flex size-10 items-center justify-center rounded-full border text-cream/80 transition-colors hover:border-primary hover:text-primary">
+              <a href={href} aria-label={label} className="flex size-10 items-center justify-center rounded-full border border-cream/40 text-cream/85 transition-colors hover:border-secondary hover:text-secondary">
                 <Icon className="size-4" aria-hidden />
               </a>
             </li>
           ))}
         </ul>
       </div>
-      <p className="container-page mt-10 text-xs text-muted-foreground">
+      <p className="container-page mt-10 text-xs text-cream/70">
         © {new Date().getFullYear()} {siteConfig.name}. Marca fictícia — modelo demonstrativo. Imagens ilustrativas.
       </p>
     </footer>

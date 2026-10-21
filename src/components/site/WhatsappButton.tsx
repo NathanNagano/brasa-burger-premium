@@ -28,7 +28,12 @@ export function WhatsappButton({ message, className, children = "Pedir pelo What
 
   return (
     <span className="relative inline-flex flex-col">
-      <button type="button" className={base} onClick={() => setNotice(true)} aria-describedby="wa-notice">
+      <button
+        type="button"
+        className={base}
+        onClick={() => setNotice(true)}
+        aria-describedby="wa-notice"
+      >
         <MessageCircle className="size-4" aria-hidden /> {children}
       </button>
       {notice && (

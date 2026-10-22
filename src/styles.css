@@ -91,6 +91,7 @@
   --heading-letter-spacing: 0.01em;
   --heading-font-weight: 400;
   --heading-text-transform: uppercase;
+  --heading-text-shadow: -4px 5px 0 rgb(0 0 0 / 78%), -8px 9px 16px rgb(0 0 0 / 72%);
   --body-line-height: normal;
   --container-max-width: 80rem;
 }
@@ -150,6 +151,7 @@
   --heading-letter-spacing: 0.01em;
   --heading-font-weight: 400;
   --heading-text-transform: none;
+  --heading-text-shadow: none;
   --body-line-height: normal;
   --container-max-width: 80rem;
 }
@@ -203,6 +205,7 @@
   --heading-letter-spacing: 0;
   --heading-font-weight: 600;
   --heading-text-transform: none;
+  --heading-text-shadow: none;
   --body-line-height: 1.65;
   --container-max-width: 76rem;
 }
@@ -232,6 +235,7 @@
     letter-spacing: var(--heading-letter-spacing);
     font-weight: var(--heading-font-weight);
     text-transform: var(--heading-text-transform);
+    text-shadow: var(--heading-text-shadow);
   }
 
   a,
@@ -283,6 +287,11 @@
   -webkit-background-clip: text;
   background-clip: text;
   color: var(--text-fire-color);
+}
+
+@utility text-fire-outline {
+  -webkit-text-stroke: 1px rgb(0 0 0 / 65%);
+  paint-order: stroke fill;
 }
 
 @utility eyebrow {

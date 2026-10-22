@@ -21,7 +21,7 @@ export function Hero() {
         <div className="max-w-xl animate-rise">
           <p className="eyebrow mb-4">Hamburgueria artesanal</p>
           <h1 className="text-5xl leading-[0.95] text-cream sm:text-6xl md:text-7xl lg:text-8xl">
-            O sabor que <span className="text-fire">acende</span> sua fome
+            O sabor que <span className="text-primary text-fire-outline">acende</span> sua fome
           </h1>
           <p className="mt-6 max-w-md text-base text-cream/75 md:text-lg">
             Burgers na chapa bem quente, ingredientes escolhidos a dedo e aquele ponto de brasa que

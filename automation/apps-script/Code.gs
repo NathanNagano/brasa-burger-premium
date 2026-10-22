@@ -1,8 +1,8 @@
 /**
  * Painel de aprovação de produtos.
  *
- * Cole este arquivo em um projeto Apps Script vinculado à planilha criada para
- * receber o Google Form. Os valores secretos ficam em Script Properties.
+ * Cole este arquivo em um projeto Apps Script vinculado à planilha das
+ * respostas do Google Form. Os segredos ficam em Script Properties.
  */
 
 const PRODUCTS_SHEET = "Produtos";
@@ -23,16 +23,14 @@ const HEADERS = [
   "Preço (centavos)",
   "Categoria",
   "Foto original (Drive)",
-  "Objeto WebP (staging)",
-  "SHA-256 WebP",
+  "Arquivo no staging GitHub",
+  "SHA staging GitHub",
   "Status",
   "Aprovado em",
   "Commit GitHub",
   "Erro",
 ];
 const STATUS = {
-  RECEIVED: "RECEBIDO",
-  PROCESSING: "PROCESSANDO",
   PENDING: "PENDENTE_APROVACAO",
   APPROVED: "APROVADO",
   PUBLISHING: "PUBLICANDO",
@@ -58,7 +56,8 @@ function setupWorkbook() {
   if (sheet.getLastRow() === 0) {
     sheet.getRange(1, 1, 1, HEADERS.length).setValues([HEADERS]);
     sheet.setFrozenRows(1);
-    sheet.getRange(1, 1, 1, HEADERS.length)
+    sheet
+      .getRange(1, 1, 1, HEADERS.length)
       .setBackground("#7f1d1d")
       .setFontColor("#ffffff")
       .setFontWeight("bold");
@@ -70,14 +69,25 @@ function setupWorkbook() {
     sheet.setColumnWidth(7, 260);
     sheet.setColumnWidth(8, 260);
     sheet.setColumnWidth(13, 360);
+  } else {
+    const existingHeaders = sheet.getRange(1, 1, 1, HEADERS.length).getDisplayValues()[0];
+    if (existingHeaders.join("|") !== HEADERS.join("|")) {
+      throw new Error(
+        "A aba Produtos já existe com outro formato. Crie uma planilha nova para esta automação.",
+      );
+    }
   }
 
   const rule = SpreadsheetApp.newDataValidation()
     .requireValueInList(Object.values(STATUS), true)
     .setAllowInvalid(false)
     .build();
-  sheet.getRange(2, columnIndex("Status"), Math.max(sheet.getMaxRows() - 1, 1), 1).setDataValidation(rule);
-  SpreadsheetApp.getUi().alert("Painel preparado. Configure as Script Properties antes de instalar os gatilhos.");
+  sheet
+    .getRange(2, columnIndex("Status"), Math.max(sheet.getMaxRows() - 1, 1), 1)
+    .setDataValidation(rule);
+  SpreadsheetApp.getUi().alert(
+    "Painel preparado. Configure as Script Properties antes de instalar os gatilhos.",
+  );
 }
 
 function installTriggers() {
@@ -100,8 +110,7 @@ function handleFormSubmit(event) {
   const description = requiredAnswer(sourceValues, FORM_FIELDS.description);
   const category = requiredAnswer(sourceValues, FORM_FIELDS.category);
   const priceCents = parsePriceToCents(requiredAnswer(sourceValues, FORM_FIELDS.price));
-  const photoAnswer = requiredAnswer(sourceValues, FORM_FIELDS.photo);
-  const photoId = extractDriveFileId(photoAnswer);
+  const photoId = extractDriveFileId(requiredAnswer(sourceValues, FORM_FIELDS.photo));
   const productId = createProductId(name);
   const badge = optionalAnswer(sourceValues, FORM_FIELDS.badge);
   const featured = optionalAnswer(sourceValues, FORM_FIELDS.featured).toLowerCase() === "sim";
@@ -112,10 +121,10 @@ function handleFormSubmit(event) {
     description,
     priceCents,
     category,
-    photoId,
+    `https://drive.google.com/open?id=${photoId}`,
     "",
     "",
-    STATUS.PROCESSING,
+    STATUS.PENDING,
     "",
     "",
     "",
@@ -123,22 +132,18 @@ function handleFormSubmit(event) {
 
   const rowNumber = sheet.getLastRow() + 1;
   sheet.getRange(rowNumber, 1, 1, HEADERS.length).setValues([row]);
-  try {
-    const conversion = convertImage(photoId, productId);
-    sheet.getRange(rowNumber, columnIndex("Objeto WebP (staging)"), 1, 2).setValues([[conversion.objectName, conversion.sha256]]);
-    sheet.getRange(rowNumber, columnIndex("Status")).setValue(STATUS.PENDING);
-    // Campos complementares seguem ocultos na planilha, mas vão no dispatch.
-    sheet.getRange(rowNumber, columnIndex("Erro")).setNote(JSON.stringify({ badge, featured }));
-  } catch (error) {
-    updateRow(rowNumber, { "Status": STATUS.ERROR, "Erro": errorMessage(error) });
-    throw error;
-  }
+  sheet.getRange(rowNumber, columnIndex("Erro")).setNote(JSON.stringify({ badge, featured }));
 }
 
 function handleProductEdit(event) {
   const range = event.range;
   const sheet = range.getSheet();
-  if (sheet.getName() !== PRODUCTS_SHEET || range.getRow() === 1 || range.getColumn() !== columnIndex("Status")) return;
+  if (
+    sheet.getName() !== PRODUCTS_SHEET ||
+    range.getRow() === 1 ||
+    range.getColumn() !== columnIndex("Status")
+  )
+    return;
   if (event.value !== STATUS.APPROVED || event.oldValue !== STATUS.PENDING) return;
 
   const lock = LockService.getScriptLock();
@@ -146,10 +151,10 @@ function handleProductEdit(event) {
   try {
     const row = readRow(range.getRow());
     if (row.Status !== STATUS.APPROVED) return;
-    updateRow(range.getRow(), { "Status": STATUS.PUBLISHING, "Aprovado em": new Date(), "Erro": "" });
+    updateRow(range.getRow(), { Status: STATUS.PUBLISHING, "Aprovado em": new Date(), Erro: "" });
     dispatchPublication(range.getRow(), row);
   } catch (error) {
-    updateRow(range.getRow(), { "Status": STATUS.ERROR, "Erro": errorMessage(error) });
+    updateRow(range.getRow(), { Status: STATUS.ERROR, Erro: errorMessage(error) });
     throw error;
   } finally {
     lock.releaseLock();
@@ -159,16 +164,21 @@ function handleProductEdit(event) {
 function doPost(event) {
   try {
     const payload = JSON.parse(event.postData.contents || "{}");
-    if (!payload.secret || payload.secret !== getRequiredProperty("CALLBACK_SECRET")) throw new Error("callback não autorizado");
+    if (!payload.secret || payload.secret !== getRequiredProperty("CALLBACK_SECRET"))
+      throw new Error("callback não autorizado");
     const sheet = getProductsSheet();
     const productId = String(payload.productId || "");
-    const idCell = sheet.getRange("A:A").createTextFinder(productId).matchEntireCell(true).findNext();
+    const idCell = sheet
+      .getRange("A:A")
+      .createTextFinder(productId)
+      .matchEntireCell(true)
+      .findNext();
     if (!idCell) throw new Error("produto não encontrado");
     const status = payload.status === "success" ? STATUS.PUBLISHED : STATUS.ERROR;
     updateRow(idCell.getRow(), {
-      "Status": status,
+      Status: status,
       "Commit GitHub": String(payload.commitSha || ""),
-      "Erro": status === STATUS.ERROR ? "Workflow do GitHub falhou. Consulte a execução." : "",
+      Erro: status === STATUS.ERROR ? "Workflow do GitHub falhou. Consulte a execução." : "",
     });
     return jsonResponse({ ok: true });
   } catch (error) {
@@ -178,7 +188,12 @@ function doPost(event) {
 
 function dispatchPublication(rowNumber, row) {
   const metadata = getRowMetadata(rowNumber);
-  const signedUrl = createSignedDownloadUrl(row["Objeto WebP (staging)"]);
+  const staging = uploadImageToStaging(extractDriveFileId(row["Foto original (Drive)"]), row.ID);
+  updateRow(rowNumber, {
+    "Arquivo no staging GitHub": staging.path,
+    "SHA staging GitHub": staging.sha,
+  });
+
   const product = {
     id: row.ID,
     name: row.Nome,
@@ -187,61 +202,83 @@ function dispatchPublication(rowNumber, row) {
     category: row.Categoria,
     badge: metadata.badge || undefined,
     featured: Boolean(metadata.featured),
-    imageSha256: row["SHA-256 WebP"],
   };
-  const owner = getRequiredProperty("GITHUB_OWNER");
-  const repository = getRequiredProperty("GITHUB_REPOSITORY");
-  const workflow = getRequiredProperty("GITHUB_WORKFLOW_FILE");
-  const response = UrlFetchApp.fetch(`https://api.github.com/repos/${owner}/${repository}/actions/workflows/${workflow}/dispatches`, {
+  const response = UrlFetchApp.fetch(workflowDispatchUrl(), {
     method: "post",
     contentType: "application/json",
-    headers: {
-      Accept: "application/vnd.github+json",
-      Authorization: `Bearer ${getRequiredProperty("GITHUB_TOKEN")}`,
-      "X-GitHub-Api-Version": "2022-11-28",
-    },
+    headers: githubHeaders(getRequiredProperty("GITHUB_WORKFLOW_TOKEN")),
     payload: JSON.stringify({
       ref: "main",
       inputs: {
         product_id: row.ID,
         product_json: JSON.stringify(product),
-        image_url: signedUrl,
+        staging_path: staging.path,
+        staging_sha: staging.sha,
       },
     }),
     muteHttpExceptions: true,
   });
   if (response.getResponseCode() !== 204) {
-    throw new Error(`GitHub recusou a publicação (${response.getResponseCode()}): ${response.getContentText()}`);
+    throw new Error(
+      `GitHub recusou a publicação (${response.getResponseCode()}): ${response.getContentText()}`,
+    );
   }
 }
 
-function convertImage(driveFileId, productId) {
+function uploadImageToStaging(driveFileId, productId) {
   const file = DriveApp.getFileById(driveFileId);
+  if (file.getSize() < 1 || file.getSize() > 10 * 1024 * 1024) {
+    throw new Error("a foto original precisa ter entre 1 byte e 10 MB");
+  }
   const blob = file.getBlob();
-  const response = UrlFetchApp.fetch(`${getRequiredProperty("CONVERTER_URL")}/convert`, {
-    method: "post",
-    contentType: blob.getContentType(),
-    headers: {
-      "X-Product-Id": productId,
-      "X-Converter-Secret": getRequiredProperty("CONVERTER_SHARED_SECRET"),
+  const extension = extensionForImage(blob.getContentType());
+  const path = `incoming/${productId}.${extension}`;
+  const owner = getRequiredProperty("GITHUB_OWNER");
+  const repository = getRequiredProperty("GITHUB_STAGING_REPOSITORY");
+  const response = UrlFetchApp.fetch(
+    `https://api.github.com/repos/${owner}/${repository}/contents/${path}`,
+    {
+      method: "put",
+      contentType: "application/json",
+      headers: githubHeaders(getRequiredProperty("GITHUB_STAGING_TOKEN")),
+      payload: JSON.stringify({
+        message: `chore(staging): receive ${productId}`,
+        content: Utilities.base64Encode(blob.getBytes()),
+        branch: "main",
+      }),
+      muteHttpExceptions: true,
     },
-    payload: blob.getBytes(),
-    muteHttpExceptions: true,
-  });
-  if (response.getResponseCode() !== 200) throw new Error(`conversão falhou (${response.getResponseCode()}): ${response.getContentText()}`);
-  return JSON.parse(response.getContentText());
+  );
+  if (![200, 201].includes(response.getResponseCode())) {
+    throw new Error(
+      `GitHub recusou a foto (${response.getResponseCode()}): ${response.getContentText()}`,
+    );
+  }
+  const content = JSON.parse(response.getContentText()).content;
+  if (!content || !content.sha) throw new Error("GitHub não retornou o SHA do arquivo de staging");
+  return { path, sha: content.sha };
 }
 
-function createSignedDownloadUrl(objectName) {
-  const response = UrlFetchApp.fetch(`${getRequiredProperty("CONVERTER_URL")}/signed-download`, {
-    method: "post",
-    contentType: "application/json",
-    headers: { "X-Converter-Secret": getRequiredProperty("CONVERTER_SHARED_SECRET") },
-    payload: JSON.stringify({ objectName }),
-    muteHttpExceptions: true,
-  });
-  if (response.getResponseCode() !== 200) throw new Error(`URL temporária falhou (${response.getResponseCode()}): ${response.getContentText()}`);
-  return JSON.parse(response.getContentText()).url;
+function workflowDispatchUrl() {
+  const owner = getRequiredProperty("GITHUB_OWNER");
+  const repository = getRequiredProperty("GITHUB_REPOSITORY");
+  const workflow = getRequiredProperty("GITHUB_WORKFLOW_FILE");
+  return `https://api.github.com/repos/${owner}/${repository}/actions/workflows/${workflow}/dispatches`;
+}
+
+function githubHeaders(token) {
+  return {
+    Accept: "application/vnd.github+json",
+    Authorization: `Bearer ${token}`,
+    "X-GitHub-Api-Version": "2022-11-28",
+  };
+}
+
+function extensionForImage(contentType) {
+  const extensions = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" };
+  const extension = extensions[String(contentType).toLowerCase()];
+  if (!extension) throw new Error("a foto deve ser JPEG, PNG ou WebP");
+  return extension;
 }
 
 function getProductsSheet() {
@@ -258,7 +295,9 @@ function readRow(rowNumber) {
 
 function updateRow(rowNumber, valuesByHeader) {
   const sheet = getProductsSheet();
-  Object.entries(valuesByHeader).forEach(([header, value]) => sheet.getRange(rowNumber, columnIndex(header)).setValue(value));
+  Object.entries(valuesByHeader).forEach(([header, value]) =>
+    sheet.getRange(rowNumber, columnIndex(header)).setValue(value),
+  );
 }
 
 function getRowMetadata(rowNumber) {
@@ -278,13 +317,14 @@ function columnIndex(header) {
 }
 
 function createProductId(name) {
-  const slug = name
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)/g, "")
-    .slice(0, 55) || "produto";
+  const slug =
+    name
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)/g, "")
+      .slice(0, 55) || "produto";
   return `${slug}-${Utilities.getUuid().slice(0, 8)}`;
 }
 
@@ -295,7 +335,10 @@ function extractDriveFileId(value) {
 }
 
 function parsePriceToCents(value) {
-  const raw = String(value).trim().replace(/^R\$\s*/i, "").replace(/\s/g, "");
+  const raw = String(value)
+    .trim()
+    .replace(/^R\$\s*/i, "")
+    .replace(/\s/g, "");
   const normalized = /^\d{1,7},\d{1,2}$/.test(raw)
     ? raw.replace(",", ".")
     : /^\d{1,7}\.\d{1,2}$/.test(raw)
@@ -335,5 +378,7 @@ function errorMessage(error) {
 }
 
 function jsonResponse(value) {
-  return ContentService.createTextOutput(JSON.stringify(value)).setMimeType(ContentService.MimeType.JSON);
+  return ContentService.createTextOutput(JSON.stringify(value)).setMimeType(
+    ContentService.MimeType.JSON,
+  );
 }

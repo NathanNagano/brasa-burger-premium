@@ -1,0 +1,11 @@
+{
+  "name": "brasa-github-publisher",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "sharp": "0.34.3"
+  }
+}

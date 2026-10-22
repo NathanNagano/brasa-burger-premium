@@ -1,4 +1,3 @@
-import { createHash } from "node:crypto";
 import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -21,8 +20,9 @@ function requiredString(value, field, maxLength) {
 }
 
 function normalizeProduct(input) {
-  if (!input || typeof input !== "object" || Array.isArray(input))
+  if (!input || typeof input !== "object" || Array.isArray(input)) {
     fail("o conteúdo recebido não é um objeto.");
+  }
 
   const raw = input;
   const id = requiredString(raw.id, "id", 80);
@@ -32,7 +32,6 @@ function normalizeProduct(input) {
 
   const category = requiredString(raw.category, "categoria", 40);
   if (!categories.has(category)) fail("categoria não existe no cardápio.");
-
   if (!Number.isSafeInteger(raw.priceCents) || raw.priceCents < 1 || raw.priceCents > 1_000_000) {
     fail("preço deve ser informado em centavos entre 1 e 1.000.000.");
   }
@@ -53,11 +52,7 @@ function normalizeProduct(input) {
     if (typeof raw.featured !== "boolean") fail("destaque deve ser verdadeiro ou falso.");
     product.featured = raw.featured;
   }
-
-  const checksum = requiredString(raw.imageSha256, "checksum da imagem", 64).toLowerCase();
-  if (!/^[a-f0-9]{64}$/.test(checksum)) fail("checksum da imagem deve usar SHA-256.");
-
-  return { product, checksum };
+  return product;
 }
 
 function isWebp(buffer) {
@@ -68,26 +63,6 @@ function isWebp(buffer) {
   );
 }
 
-async function fetchImage(url) {
-  let parsedUrl;
-  try {
-    parsedUrl = new URL(url);
-  } catch {
-    fail("URL temporária da imagem não é válida.");
-  }
-  if (parsedUrl.protocol !== "https:") fail("URL temporária da imagem deve usar HTTPS.");
-
-  const response = await fetch(parsedUrl, { redirect: "error" });
-  if (!response.ok) fail(`não foi possível baixar a imagem (${response.status}).`);
-
-  const bytes = Buffer.from(await response.arrayBuffer());
-  if (bytes.length === 0 || bytes.length > 5 * 1024 * 1024) {
-    fail("imagem convertida deve ter entre 1 byte e 5 MB.");
-  }
-  if (!isWebp(bytes)) fail("arquivo recebido não é um WebP válido.");
-  return bytes;
-}
-
 async function readCatalogue() {
   const parsed = JSON.parse(await readFile(cataloguePath, "utf8"));
   if (!Array.isArray(parsed)) throw new Error("automated-products.json precisa conter um array.");
@@ -96,9 +71,9 @@ async function readCatalogue() {
 
 async function main() {
   const rawProduct = process.env.PRODUCT_JSON;
-  const imageUrl = process.env.IMAGE_URL;
+  const sourceImagePath = process.env.IMAGE_PATH;
   if (!rawProduct) fail("PRODUCT_JSON não foi informado.");
-  if (!imageUrl) fail("IMAGE_URL não foi informada.");
+  if (!sourceImagePath) fail("IMAGE_PATH não foi informada.");
 
   let parsedProduct;
   try {
@@ -107,10 +82,11 @@ async function main() {
     fail("PRODUCT_JSON não contém JSON válido.");
   }
 
-  const { product, checksum } = normalizeProduct(parsedProduct);
-  const image = await fetchImage(imageUrl);
-  const actualChecksum = createHash("sha256").update(image).digest("hex");
-  if (actualChecksum !== checksum) fail("checksum da imagem não confere.");
+  const product = normalizeProduct(parsedProduct);
+  const image = await readFile(sourceImagePath);
+  if (image.length === 0 || image.length > 5 * 1024 * 1024 || !isWebp(image)) {
+    fail("a imagem convertida deve ser um WebP válido de até 5 MB.");
+  }
 
   const catalogue = await readCatalogue();
   const replacementIndex = catalogue.findIndex((item) => item?.id === product.id);

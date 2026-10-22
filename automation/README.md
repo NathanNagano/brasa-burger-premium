@@ -29,7 +29,7 @@ itens são acrescentados ao final do cardápio.
 ## 1. Criar o repositório privado de staging
 
 Crie um repositório privado vazio na mesma conta do repositório do site, com o
-nome `brasa-product-staging`. Inicialize-o com um `README`, para que o branch
+nome `product-intake-staging`. Inicialize-o com um `README`, para que o branch
 `main` exista. Ele recebe arquivos em `incoming/` e não precisa de código.
 
 Nunca torne esse repositório público: a Action apaga o arquivo atual depois de
@@ -66,10 +66,10 @@ gratuitas da conta.
 Use tokens de acesso pessoal de granularidade fina, com expiração curta. Crie
 dois tokens separados no GitHub:
 
-| Uso                                              | Acesso ao repositório           | Permissão mínima           |
-| ------------------------------------------------ | ------------------------------- | -------------------------- |
-| `GITHUB_WORKFLOW_TOKEN`                          | somente `brasa-burger-premium`  | `Actions: Read and write`  |
-| `GITHUB_STAGING_TOKEN` / `PRODUCT_STAGING_TOKEN` | somente `brasa-product-staging` | `Contents: Read and write` |
+| Uso                                              | Acesso ao repositório            | Permissão mínima           |
+| ------------------------------------------------ | -------------------------------- | -------------------------- |
+| `GITHUB_WORKFLOW_TOKEN`                          | somente o repositório do site    | `Actions: Read and write`  |
+| `GITHUB_STAGING_TOKEN` / `PRODUCT_STAGING_TOKEN` | somente `product-intake-staging` | `Contents: Read and write` |
 
 O segundo é o mesmo valor em dois locais: uma Script Property, para o Apps
 Script enviar a foto, e um GitHub Actions secret, para a Action baixar e apagar
@@ -83,10 +83,10 @@ script** e adicione:
 | Nome                        | Valor                                          |
 | --------------------------- | ---------------------------------------------- |
 | `GITHUB_OWNER`              | `NathanNagano`                                 |
-| `GITHUB_REPOSITORY`         | `brasa-burger-premium`                         |
+| `GITHUB_REPOSITORY`         | nome do repositório do site atual              |
 | `GITHUB_WORKFLOW_FILE`      | `publish-product.yml`                          |
 | `GITHUB_WORKFLOW_TOKEN`     | primeiro token da tabela acima                 |
-| `GITHUB_STAGING_REPOSITORY` | `brasa-product-staging`                        |
+| `GITHUB_STAGING_REPOSITORY` | `product-intake-staging`                       |
 | `GITHUB_STAGING_TOKEN`      | segundo token da tabela acima                  |
 | `CALLBACK_SECRET`           | texto aleatório com pelo menos 32 caracteres   |
 | `SHEET_ID`                  | criado automaticamente por **Preparar painel** |
@@ -102,12 +102,12 @@ No Apps Script, use **Implantar → Nova implantação → App da Web**. Configu
 - Executar como: você.
 - Quem tem acesso: qualquer pessoa com o link.
 
-Copie a URL terminada em `/exec`. No repositório `brasa-burger-premium`, abra
-**Settings → Secrets and variables → Actions** e crie estes segredos:
+Copie a URL terminada em `/exec`. No repositório do site, abra **Settings →
+Secrets and variables → Actions** e crie estes segredos:
 
 | Segredo                          | Valor                                  |
 | -------------------------------- | -------------------------------------- |
-| `PRODUCT_STAGING_REPOSITORY`     | `NathanNagano/brasa-product-staging`   |
+| `PRODUCT_STAGING_REPOSITORY`     | `NathanNagano/product-intake-staging`  |
 | `PRODUCT_STAGING_TOKEN`          | segundo token da tabela acima          |
 | `PRODUCT_SHEETS_CALLBACK_URL`    | URL `/exec` da implantação Apps Script |
 | `PRODUCT_SHEETS_CALLBACK_SECRET` | mesmo valor de `CALLBACK_SECRET`       |

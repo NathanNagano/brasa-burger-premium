@@ -1,5 +1,5 @@
 {
-  "name": "brasa-github-publisher",
+  "name": "product-github-publisher",
   "private": true,
   "type": "module",
   "engines": {

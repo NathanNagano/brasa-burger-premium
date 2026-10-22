@@ -91,8 +91,8 @@ jobs:
             echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          git config user.name "brasa-product-bot"
-          git config user.email "brasa-product-bot@users.noreply.github.com"
+          git config user.name "product-publisher-bot"
+          git config user.email "product-publisher-bot@users.noreply.github.com"
           git add public/assets/products src/data/automated-products.json
           git commit -m "chore(products): publish ${PRODUCT_ID}"
           git push origin HEAD:main

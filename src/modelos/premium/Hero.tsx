@@ -1,9 +1,13 @@
 import heroImg from "@/assets/hero-burger.jpg";
+import { IfoodButton } from "./IfoodButton";
 import { WhatsappButton } from "./WhatsappButton";
 
 export function Hero() {
   return (
-    <section id="inicio" className="relative isolate flex min-h-[92svh] items-end overflow-hidden pb-16 pt-28 md:items-center md:pb-0">
+    <section
+      id="inicio"
+      className="relative isolate flex min-h-[92svh] items-end overflow-hidden pb-16 pt-28 md:items-center md:pb-0"
+    >
       <img
         src={heroImg}
         alt="Imagem ilustrativa de hambúrguer com cheddar derretido sobre brasa"
@@ -20,7 +24,8 @@ export function Hero() {
             O sabor que <span className="text-fire">acende</span> sua fome
           </h1>
           <p className="mt-6 max-w-md text-base text-cream/75 md:text-lg">
-            Burgers na chapa bem quente, ingredientes escolhidos a dedo e aquele ponto de brasa que faz voltar.
+            Burgers na chapa bem quente, ingredientes escolhidos a dedo e aquele ponto de brasa que
+            faz voltar.
           </p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-start">
             <a
@@ -30,6 +35,7 @@ export function Hero() {
               Explorar cardápio
             </a>
             <WhatsappButton />
+            <IfoodButton />
           </div>
         </div>
       </div>

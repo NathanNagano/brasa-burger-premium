@@ -1,0 +1,90 @@
+name: Publicar produto aprovado
+
+run-name: Publicar ${{ inputs.product_id || 'produto' }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      product_id:
+        description: ID imutável do produto
+        required: true
+        type: string
+      product_json:
+        description: Dados normalizados do produto
+        required: true
+        type: string
+      image_url:
+        description: URL HTTPS temporária do WebP no staging
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: product-publication
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Baixar código atual
+        uses: actions/checkout@v5
+        with:
+          ref: main
+
+      - name: Configurar Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Validar e preparar produto
+        env:
+          PRODUCT_JSON: ${{ inputs.product_json }}
+          IMAGE_URL: ${{ inputs.image_url }}
+        run: node scripts/publish-product.mjs
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Testar catálogo e build
+        run: |
+          npm run test
+          npm run build
+
+      - id: commit
+        name: Versionar produto publicado
+        env:
+          PRODUCT_ID: ${{ inputs.product_id }}
+        run: |
+          if git diff --quiet; then
+            echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          git config user.name "brasa-product-bot"
+          git config user.email "brasa-product-bot@users.noreply.github.com"
+          git add public/assets/products src/data/automated-products.json
+          git commit -m "chore(products): publish ${PRODUCT_ID}"
+          git push origin HEAD:main
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Atualizar aprovação na planilha
+        if: always()
+        env:
+          SHEETS_CALLBACK_URL: ${{ secrets.PRODUCT_SHEETS_CALLBACK_URL }}
+          SHEETS_CALLBACK_SECRET: ${{ secrets.PRODUCT_SHEETS_CALLBACK_SECRET }}
+          PRODUCT_ID: ${{ inputs.product_id }}
+          WORKFLOW_STATUS: ${{ job.status }}
+          COMMIT_SHA: ${{ steps.commit.outputs.sha }}
+        run: |
+          if [ -z "$SHEETS_CALLBACK_URL" ] || [ -z "$SHEETS_CALLBACK_SECRET" ]; then
+            echo "Callback da planilha não configurado; status ficará em PUBLICANDO."
+            exit 0
+          fi
+          node -e 'process.stdout.write(JSON.stringify({secret: process.env.SHEETS_CALLBACK_SECRET, productId: process.env.PRODUCT_ID, status: process.env.WORKFLOW_STATUS, commitSha: process.env.COMMIT_SHA || ""}))' > callback.json
+          curl --fail-with-body --location --retry 2 --retry-delay 2 \
+            --header "Content-Type: application/json" \
+            --data @callback.json \
+            "$SHEETS_CALLBACK_URL"

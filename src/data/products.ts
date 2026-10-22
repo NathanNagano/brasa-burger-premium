@@ -26,6 +26,7 @@ import milkshakeMorango from "@/assets/milkshake-morango.webp";
 import miniChurros from "@/assets/mini-churros.webp";
 import onionRings from "@/assets/onion-rings.webp";
 import veggieBrasa from "@/assets/veggie-brasa.webp";
+import automatedProductsData from "./automated-products.json";
 
 export type CategoryId = "hamburgueres" | "combos" | "acompanhamentos" | "bebidas" | "milkshakes";
 
@@ -45,6 +46,12 @@ export interface Product {
   featured?: boolean;
 }
 
+/**
+ * Produtos enviados pelo fluxo de cadastro. O GitHub Actions só inclui dados
+ * validados neste arquivo depois da aprovação na planilha.
+ */
+const automatedProducts = automatedProductsData as Product[];
+
 export const categories: Category[] = [
   { id: "hamburgueres", label: "Hambúrgueres" },
   { id: "combos", label: "Combos" },
@@ -53,7 +60,7 @@ export const categories: Category[] = [
   { id: "milkshakes", label: "Milkshakes & sobremesas" },
 ];
 
-export const products: Product[] = [
+const builtInProducts: Product[] = [
   {
     id: "brasa-smash",
     name: "Brasa Smash",
@@ -254,6 +261,8 @@ export const products: Product[] = [
     image: brownie,
   },
 ];
+
+export const products: Product[] = [...builtInProducts, ...automatedProducts];
 
 export function filterProducts(list: Product[], category: CategoryId | "todos"): Product[] {
   return category === "todos" ? list : list.filter((p) => p.category === category);

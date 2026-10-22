@@ -1,0 +1,16 @@
+{
+  "name": "brasa-product-image-converter",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "start": "node src/index.mjs"
+  },
+  "dependencies": {
+    "@google-cloud/storage": "^7.17.1",
+    "express": "^5.1.0",
+    "sharp": "^0.34.3"
+  }
+}

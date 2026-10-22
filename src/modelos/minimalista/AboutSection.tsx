@@ -1,4 +1,4 @@
-import comboImg from "@/assets/combo-brasa.jpg";
+import comboImg from "@/assets/combo-smash.webp";
 
 export function AboutSection() {
   return (

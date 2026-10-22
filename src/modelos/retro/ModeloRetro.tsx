@@ -15,10 +15,10 @@ export function ModeloRetro() {
       <main>
         <Hero />
         <Features />
-        <MenuSection />
-        <Highlights />
         <AboutSection />
         <ContactSection />
+        <MenuSection />
+        <Highlights />
       </main>
 
       <Footer />

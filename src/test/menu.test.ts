@@ -7,6 +7,8 @@ describe("cardápio", () => {
     expect(filterProducts(products, "milkshakes").map((p) => p.id)).toEqual([
       "milkshake-chocolate",
       "milkshake-morango",
+      "milkshake-caramelo-crocante",
+      "brownie-na-brasa",
     ]);
   });
   it("Brasa Smash custa R$ 29,90", () => {

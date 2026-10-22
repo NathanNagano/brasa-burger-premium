@@ -22,6 +22,8 @@ export const siteConfig = {
     /** Número no formato internacional, só dígitos (ex.: "5511999999999"). Vazio = não configurado. */
     whatsapp: "",
     whatsappMessage: "Olá! Vim pelo site e gostaria de fazer um pedido.",
+    /** Link completo da loja no iFood. Vazio = demonstração sem redirecionamento. */
+    ifood: "",
     email: "contato@exemplo.com",
   },
   address: {

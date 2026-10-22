@@ -1,5 +1,6 @@
 import { Clock, MapPin } from "lucide-react";
 import { siteConfig } from "@/config/site";
+import { IfoodButton } from "./IfoodButton";
 import { WhatsappButton } from "./WhatsappButton";
 
 export function ContactSection() {
@@ -7,10 +8,16 @@ export function ContactSection() {
   const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address.mapsQuery)}`;
 
   return (
-    <section id="contato" aria-labelledby="contato-title" className="relative border-t-4 border-brown bg-secondary py-20 md:py-28">
+    <section
+      id="contato"
+      aria-labelledby="contato-title"
+      className="relative border-t-4 border-brown bg-secondary py-20 md:py-28"
+    >
       <div className="container-page">
         <p className="font-script text-2xl text-primary">Contato</p>
-        <h2 id="contato-title" className="mt-2 text-4xl text-foreground md:text-6xl">Vem pra brasa</h2>
+        <h2 id="contato-title" className="mt-2 text-4xl text-foreground md:text-6xl">
+          Vem pra brasa
+        </h2>
         <div className="mt-12 grid gap-6 md:grid-cols-2">
           <div className="rounded-3xl border-2 border-brown bg-card p-6 shadow-retro md:p-8">
             <div className="flex items-center gap-3 text-primary">
@@ -46,7 +53,10 @@ export function ContactSection() {
               >
                 <MapPin className="size-4" aria-hidden /> Abrir no mapa
               </a>
-              <WhatsappButton />
+              <div className="flex flex-col gap-3">
+                <WhatsappButton />
+                <IfoodButton />
+              </div>
             </div>
           </div>
         </div>

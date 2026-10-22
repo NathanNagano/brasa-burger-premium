@@ -1,4 +1,4 @@
-import comboImg from "@/assets/combo-brasa.webp";
+import comboImg from "@/assets/combo-smash.webp";
 import { siteConfig } from "@/config/site";
 
 export function AboutSection() {

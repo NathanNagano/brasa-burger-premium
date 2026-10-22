@@ -4,7 +4,7 @@ import { formatPrice } from "@/lib/whatsapp";
 export function ProductCard({ product }: { product: Product }) {
   return (
     <article className="group flex flex-col overflow-hidden rounded-2xl border-2 border-brown bg-card shadow-retro transition-transform hover:-translate-y-1">
-      <div className="relative aspect-[4/3] overflow-hidden border-b-2 border-brown">
+      <div className="relative aspect-square overflow-hidden border-b-2 border-brown">
         <img
           src={product.image}
           alt={`Imagem ilustrativa: ${product.name}`}

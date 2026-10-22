@@ -17,6 +17,9 @@ export const siteConfig = {
     title: "BRASA BURGER — Hamburgueria artesanal | Cardápio digital",
     description:
       "Conheça o cardápio da Brasa Burger: smash burgers, combos, acompanhamentos, bebidas e milkshakes. Peça pelo WhatsApp.",
+    /** URLs absolutas usadas nas prévias ao compartilhar o link. */
+    siteUrl: "https://site.brasa-burger.workers.dev",
+    shareImage: "https://site.brasa-burger.workers.dev/og-brasa-burger.jpg",
   },
   contact: {
     /** Número no formato internacional, só dígitos (ex.: "5511999999999"). Vazio = não configurado. */

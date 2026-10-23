@@ -328,9 +328,14 @@ function createProductId(name) {
 }
 
 function extractDriveFileId(value) {
-  const match = String(value).match(/[-\w]{25,}/);
-  if (!match) throw new Error("não foi possível identificar o arquivo enviado ao Drive");
-  return match[0];
+  const raw = String(value).trim();
+  const match = raw.match(/[-\w]{25,}/);
+  if (match) return match[0];
+
+  const files = DriveApp.getFilesByName(raw);
+  if (files.hasNext()) return files.next().getId();
+
+  throw new Error("não foi possível identificar o arquivo enviado ao Drive");
 }
 
 function parsePriceToCents(value) {

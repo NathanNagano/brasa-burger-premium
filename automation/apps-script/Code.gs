@@ -338,13 +338,11 @@ function parsePriceToCents(value) {
     .trim()
     .replace(/^R\$\s*/i, "")
     .replace(/\s/g, "");
-  const normalized = /^\d{1,7},\d{1,2}$/.test(raw)
+  // A resposta numérica do Google Forms pode ser normalizada como "19,9",
+  // "19.9" ou "19,90" conforme o navegador e o idioma do respondente.
+  const normalized = /^\d{1,7}([,.]\d{1,2})?$/.test(raw)
     ? raw.replace(",", ".")
-    : /^\d{1,7}\.\d{1,2}$/.test(raw)
-      ? raw
-      : /^\d{1,7}$/.test(raw)
-        ? raw
-        : null;
+    : null;
   if (!normalized) throw new Error("preço deve usar o formato 29,90");
   const cents = Math.round(Number(normalized) * 100);
   if (!Number.isSafeInteger(cents) || cents < 1) throw new Error("preço deve ser maior que zero");

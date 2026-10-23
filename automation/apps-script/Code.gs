@@ -6,6 +6,7 @@
  */
 
 const PRODUCTS_SHEET = "Produtos";
+const SPREADSHEET_ID = "17WNb5F79AVI2wbfALRmXYkTgpiYo3T23NYoZRF9yRDc";
 const FORM_FIELDS = {
   name: "Nome do produto",
   description: "Descrição",
@@ -48,7 +49,7 @@ function onOpen() {
 }
 
 function setupWorkbook() {
-  const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  const spreadsheet = SpreadsheetApp.openById(SPREADSHEET_ID);
   getProperties().setProperty("SHEET_ID", spreadsheet.getId());
   let sheet = spreadsheet.getSheetByName(PRODUCTS_SHEET);
   if (!sheet) sheet = spreadsheet.insertSheet(PRODUCTS_SHEET);
@@ -85,13 +86,11 @@ function setupWorkbook() {
   sheet
     .getRange(2, columnIndex("Status"), Math.max(sheet.getMaxRows() - 1, 1), 1)
     .setDataValidation(rule);
-  SpreadsheetApp.getUi().alert(
-    "Painel preparado. Configure as Script Properties antes de instalar os gatilhos.",
-  );
+  console.log("Painel preparado. Configure as Script Properties antes de instalar os gatilhos.");
 }
 
 function installTriggers() {
-  const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  const spreadsheet = SpreadsheetApp.openById(SPREADSHEET_ID);
   const handlers = new Set(["handleFormSubmit", "handleProductEdit"]);
   ScriptApp.getProjectTriggers()
     .filter((trigger) => handlers.has(trigger.getHandlerFunction()))
@@ -99,7 +98,7 @@ function installTriggers() {
 
   ScriptApp.newTrigger("handleFormSubmit").forSpreadsheet(spreadsheet).onFormSubmit().create();
   ScriptApp.newTrigger("handleProductEdit").forSpreadsheet(spreadsheet).onEdit().create();
-  SpreadsheetApp.getUi().alert("Gatilhos instalados.");
+  console.log("Gatilhos instalados.");
 }
 
 function handleFormSubmit(event) {
